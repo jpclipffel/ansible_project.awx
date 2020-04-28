@@ -1,0 +1,31 @@
+{% for host in ansible_play_hosts %}
+{{ host }} ansible_user={{ hostvars[host].ansible_user }} ansible_become={{ hostvars[host].ansible_become | lower }} become_user={{ hostvars[host].ansible_user_id }} ansible_private_key_file={{ hostvars[host].ssh_key }} ansible_python_interpreter={{ hostvars[host].ansible_python_interpreter }}
+{% endfor %}
+
+
+[all:vars]
+
+dockerhub_base=ansible
+
+kubernetes_context=kubernetes-admin@kubernetes
+kubernetes_namespace={{ awx_namespace }}
+
+awx_task_hostname=awx
+awx_web_hostname=awxweb
+postgres_data_dir="~/.awx/pgdocker"
+host_port=80
+host_port_ssl=443
+docker_compose_dir="~/.awx/awxcompose"
+
+pg_hostname=postgresql-postgresql-ha-pgpool.awx.svc.cluster.local
+pg_username=user
+pg_password=password
+pg_database={{ awx_database }}
+pg_port=5432
+
+admin_user=admin
+admin_password=password
+
+create_preload_data=False
+
+secret_key=awxsecret

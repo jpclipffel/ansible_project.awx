@@ -27,6 +27,7 @@
     shell: |
       if [ ! -d {{ awx_repository | default('/tmp/awx') }} ]; then git clone https://github.com/ansible/awx.git {{ awx_repository | default('/tmp/awx') }}; fi
       cd {{ awx_repository | default('/tmp/awx') }}
+      git pull
       git checkout tags/{{ awx_version }}
     delegate_to: localhost
     tags:
@@ -60,7 +61,7 @@
       - setup
   
 
-  - name: SetPostgreSQL's Helm action
+  - name: Set PostgreSQL's Helm action
     set_fact:
       helm_action: "{% if 'postgresql' in _installed_charts.stdout | from_json | map(attribute='name') | list %}upgrade{% else %}install{% endif %}"
     tags:
@@ -85,7 +86,7 @@
 
   - name: Install or upgrade PostgreSQL (Helm)
     shell:
-      helm {{ helm_action }} "postgresql" bitnami/postgresql-ha -n {{ awx_namespace }} -f {{ _postgresql_values.path }}
+      helm {{ helm_action }} "postgresql" bitnami/postgresql-ha -n {{ awx_namespace }} --set image.tag='10' -f {{ _postgresql_values.path }}
     when:
       - ""
     tags:

@@ -1,17 +1,20 @@
 global:
   storageClass: {{ awx_storageclass | default("rbd-sc") }}
-  # ---
-  postgresql:
-    username: "user"
-    password: "password"
-    repmgrUsername: "repmgr"
-    repmgrPassword: "password"
-    adminUsername: "admin"
-    adminPassword: "password"
-    # ---
-    database: {{ awx_database | default("awx") }}
-    # ---
-    replicaCount: 2
+
+postgresql:
+  username: "user"
+  password: "password"
+  repmgrUsername: "repmgr"
+  repmgrPassword: "password"
+  adminUsername: "admin"
+  adminPassword: "password"
+  database: {{ awx_database | default("awx") }}
+  replicaCount: 2
+
+pgpool:
+  adminUsername: "admin"
+  adminPassword: "password"
+  useLoadBalancing: false
 
 service:
   type: ClusterIP
