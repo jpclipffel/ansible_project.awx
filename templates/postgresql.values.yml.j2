@@ -1,20 +1,31 @@
+# image:
+#   tag: "10"
+
+
+postgresqlImage:
+  tag: "10"
+
+
+pgpoolImage:
+  tag: "4"
+
+
 global:
   storageClass: {{ awx_storageclass | default("rbd-sc") }}
+  postgresql:
+    username: "{{ pg_username }}"
+    password: "{{ pg_password }}"
+
 
 postgresql:
-  username: "user"
-  password: "password"
-  repmgrUsername: "repmgr"
-  repmgrPassword: "password"
-  adminUsername: "admin"
-  adminPassword: "password"
-  database: {{ awx_database | default("awx") }}
+  database: {{ pg_database }}
   replicaCount: 2
 
+
+
 pgpool:
-  adminUsername: "admin"
-  adminPassword: "password"
   useLoadBalancing: false
+
 
 service:
   type: ClusterIP
