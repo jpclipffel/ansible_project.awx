@@ -1,3 +1,5 @@
+# code: language=Ansible insertSpaces=true tabSize=2
+
 # - hosts: [ awx_clusters ]
 #   vars:
 #     ansible_become: false
@@ -130,6 +132,18 @@
       file:
         path: "{{ _postgresql_values.path }}"
         state: absent
+      tags:
+        - never
+        - setup
+
+
+    - name: Clone AWX
+      shell: |
+        if [ ! -d {{ awx_repository | default(lookup('env', 'PWD') + '/' + 'awx_' + awx_version) }} ]; then git clone https://github.com/ansible/awx.git {{ awx_repository | default(lookup('env', 'PWD') + '/' + 'awx_' + awx_version) }}; fi
+        cd {{ awx_repository | default('/tmp/awx') }}
+        git pull
+        git checkout tags/{{ awx_version }}
+      delegate_to: localhost
       tags:
         - never
         - setup

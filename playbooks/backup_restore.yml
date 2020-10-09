@@ -1,3 +1,5 @@
+# code: language=Ansible insertSpaces=true tabSize=2
+
 # AWX - Backup and Restore
 # Backup and restore AWX database to/from a file.
 
@@ -5,7 +7,7 @@
 - hosts: awx_cluster
   tasks:
 
-    - name: Search AWX pods
+    - name: Search PSQL pods
       shell: >
         kubectl -n "{{ kubernetes_namespace }}" get pods | grep 'postgresql-postgresql-ha-pgpool-' | awk '{print $1}' | head -n 1
       register: _pg_podname
@@ -15,7 +17,7 @@
       tags: [ never, backup, restore ]
 
 
-    - name: Set pod name
+    - name: Set facts
       set_fact:
         pg_podname: "{{ pg_podname | default(_pg_podname.stdout)}}"
       when:
@@ -69,6 +71,9 @@
     - name: Downscale AWX deployment
       shell: >
         kubectl -n {{ kubernetes_namespace }} scale --replicas=0 deployment/awx
+      register: _downscale_awx
+      failed_when:
+        - _downscale_awx.failed and not "NotFound" in _downscale_awx.stderr
       tags: [ never, restore ]
 
 
@@ -77,6 +82,8 @@
         kind: Deployment
         name: awx
         namespace: "{{ kubernetes_namespace }}"
+      when:
+        - not _downscale_awx.failed
       register: _wait_deployment
       until:
         - _wait_deployment.resources[0].status.replicas | default(0) == 0
@@ -96,6 +103,7 @@
       shell: >
         kubectl -n {{ kubernetes_namespace }} scale --replicas={{ _deployment.resources[0].status.replicas | int }} deployment/awx
       when:
+        - not _downscale_awx.failed
         - _deployment.resources[0].status.replicas | default(0) > 0
       tags: [ never, restore ]
 
