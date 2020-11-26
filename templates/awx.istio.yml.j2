@@ -1,5 +1,5 @@
 ---
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
  name: {{ awx_gateway | default("awx-gw") }}
@@ -18,7 +18,10 @@ spec:
      serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
      privateKey: /etc/istio/ingressgateway-certs/tls.key
    hosts:
-   - "*"
+{% for host in awx_gateway_hosts %}
+   - {{ host }}
+{% endfor %}
+
  # HTTP
  - port:
      number: 80
@@ -33,14 +36,17 @@ spec:
 
 
 ---
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: {{ awx_virtualservice | default("awx-vs") }}
   namespace: {{ awx_namespace | default("awx") }}
 spec:
   hosts:
-  - "*"
+{% for host in awx_gateway_hosts %}
+   - {{ host }}
+{% endfor %}
+
   gateways:
   - {{ awx_gateway | default("awx-gw") }}
   http:
