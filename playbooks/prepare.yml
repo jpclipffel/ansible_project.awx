@@ -1,55 +1,7 @@
 # code: language=Ansible insertSpaces=true tabSize=2
 
-# - hosts: [ awx_clusters ]
-#   vars:
-#     ansible_become: false
-#     # gather_facts: false
-#   tasks:
-#     - name: Clone AWX
-#       shell: |
-#         if [ ! -d {{ awx_repository | default('/tmp/awx') }} ]; then git clone https://github.com/ansible/awx.git {{ awx_repository | default('/tmp/awx') }}; fi
-#         cd {{ awx_repository | default('/tmp/awx') }}
-#         git pull
-#         git checkout tags/{{ awx_version }}
-#       delegate_to: localhost
-#       tags:
-#         - never
-#         - setup
-
-
-#     - name: Template AWX installer inventory
-#       template:
-#         src: "inventories/inventory-{{ awx_version }}.ini.j2"
-#         dest: "{{ awx_inventory | default('/tmp/awx-inventory.ini') }}"
-#       delegate_to: localhost
-#       tags:
-#         - never
-#         - setup
-
-
 - hosts: awx_cluster
   tasks:
-
-    # - name: Debug
-    #   debug:
-    #     msg:
-    #       - "host        : {{ inventory_hostname }}"
-    #       - "user        : {{ ansible_user }}"
-    #       - "become      : {{ ansible_become | lower }}"
-    #       - "become_user : {{ ansible_user_id }}"
-    #       - "key file    : {{ ansible_private_key_file }}"
-    #       - "python      : {{ ansible_python_interpreter }}"
-    #   tags:
-    #     - always
-
-
-    # - name: Set SSH key path fact
-    #   set_fact:
-    #     ssh_key: "{{ ansible_private_key_file }}"
-    #   tags:
-    #     - never
-    #     - setup
-
 
     - name: Create AWX namespace
       shell:
@@ -90,22 +42,11 @@
 
     - name: Template PostgreSQL's Helm values
       template:
-        src: postgresql.values.yml.j2
+        src: ../templates/postgresql.values.yml.j2
         dest: "{{ _postgresql_values.path }}"
       tags:
         - never
         - setup
-
-
-    # - name: Install or upgrade PostgreSQL (Helm)
-    #   shell: >
-    #     helm {{ helm_action }} "postgresql" postgresql-ha --repo "https://charts.bitnami.com/bitnami" --namespace {{ kubernetes_namespace }} 
-    #     --set image.tag='10' -f {{ _postgresql_values.path }}
-    #   when:
-    #     - ""
-    #   tags:
-    #     - never
-    #     - setup
 
 
     - name: Install or upgrade PostgreSQL (Helm)
@@ -132,18 +73,6 @@
       file:
         path: "{{ _postgresql_values.path }}"
         state: absent
-      tags:
-        - never
-        - setup
-
-
-    - name: Clone AWX
-      shell: |
-        if [ ! -d {{ awx_repository | default(lookup('env', 'PWD') + '/' + 'awx_' + awx_version) }} ]; then git clone https://github.com/ansible/awx.git {{ awx_repository | default(lookup('env', 'PWD') + '/' + 'awx_' + awx_version) }}; fi
-        cd {{ awx_repository | default('/tmp/awx') }}
-        git pull
-        git checkout tags/{{ awx_version }}
-      delegate_to: localhost
       tags:
         - never
         - setup

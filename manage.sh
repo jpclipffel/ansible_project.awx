@@ -7,6 +7,7 @@
 ANSIBLE="ansible-playbook"
 PLAYBOOK_BACKUP="$(dirname $0)/playbooks/backup_restore.yml"
 PLAYBOOK_RESTORE="$(dirname $0)/playbooks/backup_restore.yml"
+PLAYBOOK_PREPARE="$(dirname $0)/playbooks/prepare.yml"
 
 # Format
 _norm=$(tput sgr0)
@@ -20,9 +21,17 @@ function usage() {
     local script_name="./$(basename ${0})"
     # ---
     cat << EOF
-Usage: ${script_name} {${_bold}backup|restore|deploy${_norm}} [arguments]
+Usage: ${script_name} {${_bold}prepare|backup|restore|deploy${_norm}} [arguments]
 
-${_bold}backup${_norm} - Backup an AWX database to a dump file
+${_bold}prepare${_norm} - Creates an AWX namespace and install a PostgreSQL database.
+
+    ${_undr}Usage${_norm}
+    ${script_name} prepare <inventory>
+
+    ${_undr}Example${_norm}
+    ${script_name} prepare ../inventories/awx_prod/
+
+${_bold}backup${_norm} - Backups an AWX database to a dump file
 
     ${_undr}Usage${_norm}
     ${script_name} backup <inventory> <database dump file>
@@ -31,7 +40,7 @@ ${_bold}backup${_norm} - Backup an AWX database to a dump file
     ${script_name} backup ../inventories/awx_prod/ ~/Downloads/awx_prod.dump
 
 
-${_bold}restore${_norm} - Restore an AWX database from a dump file
+${_bold}restore${_norm} - Restores an AWX database from a dump file
 
     ${_undr}Usage${_norm}
     ${script_name} restore <inventory> <database dump file>
@@ -40,7 +49,7 @@ ${_bold}restore${_norm} - Restore an AWX database from a dump file
     ${script_name} restore ../inventories/awx_prod/ ~/Downloads/awx_prod.dump
 
 
-${_bold}deploy${_norm} - Deploy or redeploy AWX
+${_bold}deploy${_norm} - Deploys or redeploy AWX
 
 By default, ${_bold}deploy${_norm} will backup the AWX database to the current working directory as ${_bold}awx_autosave_deploy.dump.<date>_<time>${_norm}.
 You can pass a third optional argument to change the backup file name and location.
@@ -60,6 +69,18 @@ function confirm() {
     echo "${@}"
     read -p "Continue ? [y/N]: " cont
     [[ "${cont}" != "y" ]] && exit 1
+}
+
+
+# Create AWX namespace and deploy a PSQL server
+function prepare() {
+    local inventory=${1}
+    # ---
+    # Assertions
+    [[ ! -e ${inventory} ]] && echo "Error: inventory '${inventory}' not found" && usage && exit 1
+    # Prepare
+    confirm "Will now preapre AWX deployment on cluster '${inventory}'"
+    ${ANSIBLE} -i ${inventory} ${PLAYBOOK_PREPARE} --tags 'setup'
 }
 
 
@@ -113,6 +134,7 @@ function deploy() {
 # Entry point
 case ${1} in
     usage|help) usage; exit 0;;
+    prepare)    shift; prepare ${@};;
     backup)     shift; backup_db ${@};;
     restore)    shift; restore_db ${@};;
     deploy)     shift; deploy ${@};;
