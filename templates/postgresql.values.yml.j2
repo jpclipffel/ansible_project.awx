@@ -5,13 +5,12 @@ pgpoolImage:
   tag: "4"
 
 global:
-  storageClass: {{ awx_storageclass | default("rbd-sc") }}
   postgresql:
     username: "{{ pg_username }}"
     password: "{{ pg_password }}"
+    database: "{{ pg_database }}"
 
 postgresql:
-  database: {{ pg_database }}
   replicaCount: 2
 
 pgpool:
