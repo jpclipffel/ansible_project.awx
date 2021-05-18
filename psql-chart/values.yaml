@@ -1,0 +1,17 @@
+postgresql-ha:
+postgresql-ha:
+  postgresqlImage:
+    tag: "10"
+  pgpoolImage:
+    tag: "4"
+  global:
+    postgresql:
+      username: postgres
+      password: password
+      database: awx
+  postgresql:
+    replicaCount: 2
+  pgpool:
+    useLoadBalancing: false
+  service:
+    type: ClusterIP
