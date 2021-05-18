@@ -2,31 +2,49 @@
 
 Ansible project to deploy and manage AWX clusters.
 
-An utility script, `manage.sh`, will help you in the (re)deployment, upgrade, backup and restoration of AWX.
+An utility script, `manage.sh`, will help you in the (re)deployment, upgrade,
+backup and restoration of AWX.
 
 ## Inventory setup
 
-This project requires a host group named `awx_cluster` to hold AWX variables and clusters hosts list (usually the K8S master node / VIP).
+This project requires a host group named `awx_cluster` to hold AWX variables
+and clusters hosts list (usually the K8S master node / VIP).
 
 ## Playbooks
 
-| Playbook                       | Description                                                | Ready for AWX |
-|--------------------------------|------------------------------------------------------------|---------------|
-| `playbooks/backup_restore.yml` | Backup and restore the AWX database.                       | No            |
-| `playbooks/preapre.yml`        | Prepare a generic AWX installation on a Kubernetes cluster | No            |
+| Playbook                       | Description                         |
+|--------------------------------|-------------------------------------|
+| `playbooks/backup_restore.yml` | Backup and restore the AWX database |
+
+Deprecated playbooks:
+
+| Playbook                | Description                     |
+|-------------------------|---------------------------------|
+| `playbooks/preapre.yml` | Prepare AWX installation on K8S |
 
 ### Playbook - `playbooks/backup_restore.yml`
 
 Backup and restore the AWX database.
 
-By default, the database backup will be write and read to/from `./database.dump`; You can customize the path by setting the variable `awx_db_dump`.
+By default, the database backup will be write and read to/from 
+`./database.dump`; You can customize the path by setting the variable 
+`awx_db_dump`.
 
-Usage:
+#### Backup
 
-* Backup: `ansible-playbook -i <path to inventory> playbooks/backup_restore.yml --tags backup`
-* Restore: `ansible-playbook -i <path to inventory> playbooks/backup_restore.yml --tags restore`
+```shell
+ansible-playbook -i <path to inventory> playbooks/backup_restore.yml --tags backup
+```
+
+#### Restore
+
+```shell
+ansible-playbook -i <path to inventory> playbooks/backup_restore.yml --tags restore
+```
 
 ### Playbook - `playbooks/prepare.yml`
+
+> This playbook is deprecated !
 
 Prepare a generic AWX installation on a Kubernetes cluster:
 
@@ -34,37 +52,86 @@ Prepare a generic AWX installation on a Kubernetes cluster:
 * Install or update PostgresQL Helm chart
 * Clone and update AWX repository on Ansible controller (local host)
 
-Usage: `ansible-playbook -i <path to inventory> playbooks/prepare.yml --tags setup`
+#### Usage
+
+```shell
+ansible-playbook -i <path to inventory> playbooks/prepare.yml --tags setup
+```
+
 
 ### Playbook - `awx_{ awx_version }/installer/install.yml`
 
 Install AWX using the official and default AWX installation playbook for Kubernetes.
 
 > Note  
-> This playbook is located in the AWX repository, which is cloned and updated when running `prepare.yml`.
+> This playbook is located in the AWX source repository
 
-Usage: `ansible-playbook -i <path to inventory> <awx repository>/installer/install.yml -l awx_cluster`
+#### Usage
+
+```shell
+ansible-playbook -i <path to inventory> <awx repository>/installer/install.yml -l awx_cluster
+```
 
 ---
 
 ## Management tips
 
+### Prepare
+
+```shell
+./manage.sh prepare <path to inventory>
+```
+
 ### Backup
 
-* Using `manage.sh`: `./manage.sh backup <path to inventory> <path to DB dump>`
-* Using `ansible-playbook`: `ansible-playbook -i <path to inventory> playbooks/backup_restore.yml --tags backup -e awx_db_dump="<path to DB dump>"`
+#### With `manage.sh`
+
+```shell
+./manage.sh backup <path to inventory> <path to DB dump>
+```
+
+#### With `ansible-playbook`
+
+```shell
+ansible-playbook -i <path to inventory> playbooks/backup_restore.yml --tags backup -e awx_db_dump="<path to DB dump>"
+```
+
 
 ### Restore
 
-* Using `manage.sh`: `./manage.sh restore <path to inventory> <path to DB dump>`
-* Using `ansible-playbook`: `ansible-playbook -i <path to inventory> playbooks/backup_restore.yml --tags restore -e awx_db_dump="<path to DB dump>`
+#### With `manage.sh`
+
+```shell
+./manage.sh restore <path to inventory> <path to DB dump>
+```
+
+#### With `ansible-playbook`
+
+```shell
+ansible-playbook -i <path to inventory> playbooks/backup_restore.yml --tags restore -e awx_db_dump="<path to DB dump>
+```
 
 ### Refresh, deploy, redeploy, upgrade
 
-* Using `manage.sh`: `./manage.sh deploy <path to inventory> <path to AWX installation playbook>`
-* Using `ansible-playbook`:
-  * Backup database: `ansible-playbook -i <path to inventory> playbook/backup_restore.yml --tags backup`
-  * Run AWX installer: `ansible-playbook -i <path to inventory> <awx repository>/installer/install.yml -l awx_cluster`
+#### With `manage.sh`
+
+```
+./manage.sh deploy <path to inventory> <path to AWX installation playbook>
+```
+
+#### With `ansible-playbook`
+
+Backup database:
+
+```
+ansible-playbook -i <path to inventory> playbook/backup_restore.yml --tags backup
+```
+
+Run AWX installer:
+
+```
+ansible-playbook -i <path to inventory> <awx repository>/installer/install.yml -l awx_cluster
+```
 
 ### Scale AWX deployment
 
