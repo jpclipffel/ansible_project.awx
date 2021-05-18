@@ -7,7 +7,11 @@
 ANSIBLE="ansible-playbook"
 PLAYBOOK_BACKUP="$(dirname $0)/playbooks/backup_restore.yml"
 PLAYBOOK_RESTORE="$(dirname $0)/playbooks/backup_restore.yml"
-PLAYBOOK_PREPARE="$(dirname $0)/playbooks/prepare.yml"
+# PLAYBOOK_PREPARE="$(dirname $0)/playbooks/prepare.yml"
+PSQL_NAME="postgresql"
+PSQL_CHART="$(dirname $0)/psql-chart"
+PSQL_NAMESPACE="awx"
+
 
 # Format
 _norm=$(tput sgr0)
@@ -72,15 +76,21 @@ function confirm() {
 }
 
 
-# Create AWX namespace and deploy a PSQL server
+# Deploys a PSQL server
 function prepare() {
     local inventory=${1}
+    local context=$(kubectl config get-contexts --no-headers 2>/dev/null | grep '\*' | awk '{print $2}')
+    local installed=$(helm list --namespace awx 2>/dev/null | grep 'postgresql')
     # ---
-    # Assertions
-    [[ ! -e ${inventory} ]] && echo "Error: inventory '${inventory}' not found" && usage && exit 1
-    # Prepare
-    confirm "Will now preapre AWX deployment on cluster '${inventory}'"
-    ${ANSIBLE} -i ${inventory} ${PLAYBOOK_PREPARE} --tags 'setup'
+    [[ ! -n "${context}" ]] && echo "Error: K8S context is null/undefined" && exit 1
+    [[ ! -d ${PSQL_CHART} ]] && echo "Error: PSQL chart '${PSQL_CHART}' not found" && exit 1
+    [[ ! -z "${installed}" ]] && echo "Error: PSQL chart '${PSQL_CHART}' already installed" && exit 1
+    # ---
+    confirm "Will now install PSQL chart on context '${context}'"
+    echo "Updating PSQL chart depencencies"
+    helm dependency update ${PSQL_CHART}
+    echo "PSQL chart not installed, installing it"
+    helm install ${PSQL_NAME} ${PSQL_CHART} --namespace ${PSQL_NAMESPACE} --values "${PSQL_CHART}/values.yaml"
 }
 
 
