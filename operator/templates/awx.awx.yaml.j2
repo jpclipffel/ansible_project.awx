@@ -1,0 +1,89 @@
+# code: language=jinja-yaml insertSpaces=true tabSize=2
+
+---
+# AWX admin account password
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ awx_resourcename }}-admin-password"
+  namespace: "{{ kubernetes_namespace }}"
+stringData:
+  password: "{{ admin_password }}"
+
+---
+# AWX secret key
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ awx_resourcename }}-secret-key"
+  namespace: "{{ kubernetes_namespace }}"
+stringData:
+  secret_key: "{{ secret_key }}"
+type: Opaque
+
+{# ---
+# AWX's PSQL configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ awx_resourcename }}-postgres-configuration"
+  namespace: "{{ kubernetes_namespace }}"
+stringData:
+  host: "{{ pg_hostname }}"
+  port: "{{ pg_port | int }}"
+  database: "{{ pg_database }}"
+  username: "{{ pg_username }}"
+  password: "{{ pg_password }}"
+type: Opaque #}
+
+---
+# AWX's previou PSQL configuration
+{# apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ awx_resourcename }}-old-postgres-configuration"
+  namespace: "{{ kubernetes_namespace }}"
+stringData:
+  host: "{{ pg_hostname }}"
+  port: "{{ pg_port }}"
+  database: "{{ pg_database }}"
+  username: "{{ pg_username }}"
+  password: "{{ pg_password }}"
+type: Opaque #}
+
+---
+# AWX's secret key
+{# apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ awx_resourcename }}-secret-key"
+  namespace: "{{ kubernetes_namespace }}"
+stringData:
+  secret_key: "{{ secret_key }}"
+type: Opaque #}
+
+---
+# AWX deployment
+apiVersion: awx.ansible.com/v1beta1
+kind: AWX
+metadata:
+  name: "{{ awx_resourcename }}"
+  namespace: "{{ kubernetes_namespace }}"
+spec: {{ awx_spec }}
+
+{# ---
+# AWX configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ awx_resourcename }}-extra-config"
+  namespace: "{{ kubernetes_namespace }}"
+data:
+  ldap.py: |
+    AUTH_LDAP_GLOBAL_OPTIONS = {
+        ldap.OPT_X_TLS_REQUIRE_CERT: False
+    }
+  custom.py: |
+    AUTH_LDAP_GLOBAL_OPTIONS = {
+        ldap.OPT_X_TLS_REQUIRE_CERT: False
+    } #}

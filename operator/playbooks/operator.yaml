@@ -1,0 +1,48 @@
+# code: language=jinja-yaml insertSpaces=true tabSize=2
+
+# AWX - Operator management
+# Manages AWX operator on K8S
+
+
+- hosts: awx_cluster
+  tasks:
+
+    - name: Set facts
+      set_fact:
+        operator_yaml: "../templates/awx-operator-{{ awx_operator_version }}.yaml.j2"
+        awx_yaml: "../templates/awx.awx.yaml.j2"
+      tags: [always]
+
+    # ---
+
+    # - name: Apply AWX operator
+    #   k8s:
+    #     definition: "{{ lookup('template', operator_yaml) }}"
+    #     # namespace: "{{ kubernetes_namespace }}"
+    #     namespace: default
+    #     state: present
+    #   tags: [never, operator-apply]
+
+    - name: Apply AWX CRD
+      k8s:
+        definition: "{{ lookup('template', awx_yaml) }}"
+        namespace: "{{ kubernetes_namespace }}"
+        state: present
+      tags: [never, apply]
+
+    # ---
+
+    - name: Delete AWX CRD
+      k8s:
+        definition: "{{ lookup('template', awx_yaml) }}"
+        namespace: "{{ kubernetes_namespace }}"
+        state: absent
+      tags: [never, delete]
+
+    # - name: Delete AWX operator
+    #   k8s:
+    #     definition: "{{ lookup('template', operator_yaml) }}"
+    #     # namespace: "{{ kubernetes_namespace }}"
+    #     namespace: default
+    #     state: absent
+    #   tags: [never, operator-delete]
