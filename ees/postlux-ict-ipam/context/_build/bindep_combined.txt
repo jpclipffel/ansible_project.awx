@@ -1,0 +1,2 @@
+gcc [platform:rpm]  # from collection user
+python38-devel [platform:rpm compile]  # from collection user

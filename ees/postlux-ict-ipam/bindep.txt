@@ -1,0 +1,2 @@
+gcc [platform:rpm]
+python38-devel [platform:rpm compile]

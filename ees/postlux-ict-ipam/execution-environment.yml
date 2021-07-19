@@ -1,0 +1,8 @@
+---
+version: 1
+dependencies:
+  system: bindep.txt
+  python: requirements.txt
+# additional_build_steps:
+#   prepend: |
+#     RUN yum -y install gcc
