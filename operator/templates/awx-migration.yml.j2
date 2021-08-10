@@ -1,0 +1,59 @@
+# code: language="jinja-yaml" insertSpaces=true tabSize=2
+#
+# AWX deployment by operator - Migration version
+#
+# Use this deployment template to deploy AWX by operator while migrating from
+# an AWX cluster using an unmanaged PSQL server.
+
+
+# One shall never delete the Ansible admin password and secret key when
+# deleting the migration deployment.
+{% if not 'delete' in ansible_run_tags %}
+
+---
+# AWX admin account password
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ awx_resourcename }}-admin-password"
+  namespace: "{{ awx_namespace }}"
+stringData:
+  password: "{{ awx_admin_password }}"
+
+---
+# AWX secret key
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ awx_resourcename }}-secret-key"
+  namespace: "{{ awx_namespace }}"
+stringData:
+  secret_key: "{{ secret_key }}"
+type: Opaque
+
+{% endif %}
+
+
+---
+# AWX's previous PSQL configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ awx_resourcename }}-old-postgres-configuration"
+  namespace: "{{ awx_namespace }}"
+stringData:
+  host: "{{ pg_hostname }}"
+  port: "{{ pg_port }}"
+  database: "{{ pg_database }}"
+  username: "{{ pg_username }}"
+  password: "{{ pg_password }}"
+type: Opaque
+
+---
+# AWX deployment
+apiVersion: awx.ansible.com/v1beta1
+kind: AWX
+metadata:
+  name: "{{ awx_resourcename }}"
+  namespace: "{{ awx_namespace }}"
+spec: {{ awx_spec | combine(awx_old_psql) }}

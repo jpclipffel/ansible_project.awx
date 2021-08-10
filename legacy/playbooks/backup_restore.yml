@@ -16,14 +16,12 @@
         - pg_podname | default('') | length < 1
       tags: [ never, backup, restore ]
 
-
     - name: Set facts
       set_fact:
         pg_podname: "{{ pg_podname | default(_pg_podname.stdout)}}"
       when:
         - pg_k8s | default(true)
       tags: [ never, backup, restore ]
-
 
     - name: Create database dump temporary file
       tempfile:
@@ -40,7 +38,6 @@
       tags:
         [ never, backup ]
 
-
     - name: Fetch AWX database dump
       fetch:
         src: "{{ _dump.path }}"
@@ -48,6 +45,13 @@
         dest: "{{ awx_db_dump | default(lookup('env', 'PWD') + '/' + 'database.dump') }}"
         flat: yes
       tags: [ never, backup ]
+    
+    # - name: Transfer AWX database dump
+    #   synchronize:
+    #     src: "{{ _dump.path }}"
+    #     dest: "/srv/avamar_backup/awx-devops/database.dump"
+    #   delegate_to: "{{ groups['backup'][0] }}"
+    #   tags: [never, backup]
 
     # --- Restore ---
 
@@ -58,7 +62,6 @@
         dest: "{{ _dump.path }}"
       tags: [ never, restore ]
 
-
     - name: Get current AWX deployment scale
       k8s_info:
         kind: Deployment
@@ -67,7 +70,6 @@
       register: _deployment
       tags: [ never, restore ]
     
-
     - name: Downscale AWX deployment
       shell: >
         kubectl -n {{ kubernetes_namespace }} scale --replicas=0 deployment/awx
@@ -75,7 +77,6 @@
       failed_when:
         - _downscale_awx.failed and not "NotFound" in _downscale_awx.stderr
       tags: [ never, restore ]
-
 
     - name: Wait for AWX deployment to be downscaled
       k8s_info:
@@ -91,13 +92,11 @@
       delay: 10
       tags: [ never, restore ]
 
-
     - name: Import AWX database
       shell: >
         cat {{ _dump.path }} | kubectl exec -i -n {{ kubernetes_namespace }} {{ pg_podname }} -- 
         /bin/bash -c "export PGPASSWORD={{ pg_password }}; pg_restore --no-owner --no-acl --role={{ pg_username }} --clean -h {{ pg_hostname }} -U {{ pg_username }} -d {{ pg_database }}"
       tags: [ never, restore ]
-
 
     - name: Upscale AWX deployment
       shell: >
@@ -107,7 +106,6 @@
         - _deployment.resources[0].status.replicas | default(0) > 0
       tags: [ never, restore ]
 
-
     # --- All ---
 
     - name: Cleanup
@@ -115,3 +113,12 @@
         path: "{{ _dump.path }}"
         state: absent
       tags: [ never, backup, restore ]
+
+
+# - hosts: backup
+#   tasks:
+#     - name: Transfer database dump
+#       copy:
+#         src: "{{ awx_db_dump | default(lookup('env', 'PWD') + '/' + 'database.dump') }}"
+#         dest: "/srv/avamar_backup/awx-devops/database.dump"
+#       tags: [never]

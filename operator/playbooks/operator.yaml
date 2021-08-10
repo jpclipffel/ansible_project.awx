@@ -1,4 +1,4 @@
-# code: language=jinja-yaml insertSpaces=true tabSize=2
+# code: language=ansible insertSpaces=true tabSize=2
 
 # AWX - Operator management
 # Manages AWX operator on K8S
@@ -7,42 +7,47 @@
 - hosts: awx_cluster
   tasks:
 
-    - name: Set facts
-      set_fact:
-        operator_yaml: "../templates/awx-operator-{{ awx_operator_version }}.yaml.j2"
-        awx_yaml: "../templates/awx.awx.yaml.j2"
+    # --- Common ---
+
+    - name: Assertion
+      assert:
+        that:
+          - awx_mode | default('') in ['migration', 'managed']
+        fail_msg: "Variable 'awx_mode' must be 'migration' or 'managed', not '{{ awx_mode | default('empty') }}'"
       tags: [always]
 
-    # ---
+    - name: Set facts
+      set_fact:
+        _operator_yaml: "../files/awx-operator-{{ awx_operator_version }}.yml"
+        _awx_yaml: "../templates/awx-{{ awx_mode }}.yml.j2"
+      tags: [always]
 
-    # - name: Apply AWX operator
-    #   k8s:
-    #     definition: "{{ lookup('template', operator_yaml) }}"
-    #     # namespace: "{{ kubernetes_namespace }}"
-    #     namespace: default
-    #     state: present
-    #   tags: [never, operator-apply]
+    # --- Deployment and removal ---
 
-    - name: Apply AWX CRD
+    - name: Apply AWX operator
       k8s:
-        definition: "{{ lookup('template', awx_yaml) }}"
+        definition: "{{ lookup('file', _operator_yaml) }}"
+        namespace: default
+        state: present
+      tags: [never, apply-operator]
+
+    - name: Apply AWX resources
+      k8s:
+        definition: "{{ lookup('template', _awx_yaml) }}"
         namespace: "{{ kubernetes_namespace }}"
         state: present
       tags: [never, apply]
 
-    # ---
-
-    - name: Delete AWX CRD
+    - name: Delete AWX resources
       k8s:
-        definition: "{{ lookup('template', awx_yaml) }}"
+        definition: "{{ lookup('template', _awx_yaml) }}"
         namespace: "{{ kubernetes_namespace }}"
         state: absent
       tags: [never, delete]
 
-    # - name: Delete AWX operator
-    #   k8s:
-    #     definition: "{{ lookup('template', operator_yaml) }}"
-    #     # namespace: "{{ kubernetes_namespace }}"
-    #     namespace: default
-    #     state: absent
-    #   tags: [never, operator-delete]
+    - name: Delete AWX operator
+      k8s:
+        definition: "{{ lookup('file', _operator_yaml) }}"
+        namespace: default
+        state: absent
+      tags: [never, delete-operator]

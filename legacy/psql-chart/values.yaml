@@ -1,7 +1,7 @@
 postgresql-ha:
-postgresql-ha:
   postgresqlImage:
     tag: "10"
+    # tag: 11
   pgpoolImage:
     tag: "4"
   global:

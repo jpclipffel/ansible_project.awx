@@ -1,0 +1,15 @@
+# code: language=jinja-yaml insertSpaces=true tabSize=2
+#
+# AWX deployment by operator - Production version
+#
+# Use this deployment template to deploy AWX by operator.
+# It uses th built-in DB.
+
+---
+# AWX deployment
+apiVersion: awx.ansible.com/v1beta1
+kind: AWX
+metadata:
+  name: "{{ awx_resourcename }}"
+  namespace: "{{ awx_namespace }}"
+spec: {{ awx_spec }}
