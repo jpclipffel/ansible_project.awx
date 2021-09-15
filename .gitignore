@@ -2,3 +2,5 @@
 **/charts/*.tgz
 Chart.lock
 
+# EEs artifacts
+**/ees/*/context/*
