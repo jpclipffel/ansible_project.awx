@@ -5,7 +5,7 @@
 # REGISTRY="harbor-prod.dt.ept.lu/awx-ees"
 
 IMAGE_VERSION="${IMAGE_VERSION:-"0.0.1"}"
-REGISTRY="${REGISTRY:-"harbor-prod.dt.ept.lu/awx-ees"}"
+REGISTRY="${REGISTRY:-"harbor.ptech.lu/awx-ees"}"
 
 
 # Usage
